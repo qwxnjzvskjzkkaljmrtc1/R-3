@@ -1,0 +1,33 @@
+name: TikTok HD images
+
+on:
+  push:
+    paths:
+      - "tiktok_url.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install yt-dlp
+        run: pip install -U "yt-dlp @ git+https://github.com/yt-dlp/yt-dlp.git"
+      - name: Download HD images
+        run: |
+          rm -rf images
+          python tiktok_images.py "$(head -n1 tiktok_url.txt | tr -d '[:space:]')" images
+          ls -la images
+      - name: Commit images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add images
+          git commit -m "Add HD images from TikTok post" || echo "nothing to commit"
+          git push
